@@ -1,0 +1,16 @@
+{
+  "name": "Tulsa Trucks For Sale",
+  "short_name": "Tulsa Trucks",
+  "description": "Private seller truck marketplace. Find trucks, list yours, apply for financing.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#051d3d",
+  "theme_color": "#0b4a8a",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
