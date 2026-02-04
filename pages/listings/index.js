@@ -64,10 +64,10 @@ export default function Listings() {
     query = query.order('created_at', { ascending: false });
     const { data } = await query;
     const trucksData = data || [];
-    const sellerIds = [...new Set(trucksData.map((t) => t.seller_id).filter(Boolean))];
-    const plansMap = await getSellerPlansMap(sellerIds);
-    const { data: sellersData } = sellerIds.length > 0
-      ? await supabase.from('truck_sellers').select('id, name, profile_picture_url').in('id', sellerIds)
+    const truckSellerIds = [...new Set(trucksData.map((t) => t.seller_id).filter(Boolean))];
+    const plansMap = await getSellerPlansMap(truckSellerIds);
+    const { data: sellersData } = truckSellerIds.length > 0
+      ? await supabase.from('truck_sellers').select('id, name, profile_picture_url').in('id', truckSellerIds)
       : { data: [] };
     const sellersMap = (sellersData || []).reduce((acc, s) => { acc[s.id] = s; return acc; }, {});
     const trucksWithSellers = trucksData.map((t) => ({ ...t, seller: sellersMap[t.seller_id] }));
