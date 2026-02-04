@@ -57,12 +57,14 @@ CREATE TABLE IF NOT EXISTS truck_sellers (
   phone TEXT,
   company TEXT,
   profile_picture_url TEXT,
+  seller_type TEXT CHECK (seller_type IN ('private', 'dealer')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Add user_id column if not exists (for linking to truck_profiles)
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS user_id UUID UNIQUE;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS profile_picture_url TEXT;
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS seller_type TEXT;
 
 -- Seller reviews (buyers can rate sellers)
 CREATE TABLE IF NOT EXISTS truck_seller_reviews (

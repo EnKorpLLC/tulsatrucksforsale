@@ -15,6 +15,7 @@ export default function SellerProfile() {
     name: '',
     phone: '',
     company: '',
+    seller_type: '',
   });
 
   // Check if redirected from trying to list a truck
@@ -66,6 +67,10 @@ export default function SellerProfile() {
       setError('Phone number is required so buyers can contact you');
       return;
     }
+    if (!form.seller_type) {
+      setError('Please select whether you are a private seller or a dealer');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -73,7 +78,7 @@ export default function SellerProfile() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...form, profile_picture_url: profilePictureUrl || null }),
+        body: JSON.stringify({ ...form, profile_picture_url: profilePictureUrl || null, seller_type: form.seller_type }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -181,6 +186,39 @@ export default function SellerProfile() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            I am a <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="seller_type"
+                value="private"
+                checked={form.seller_type === 'private'}
+                onChange={(e) => setForm({ ...form, seller_type: e.target.value })}
+                className="text-primary-600 focus:ring-primary-500"
+              />
+              <span>Private seller</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="seller_type"
+                value="dealer"
+                checked={form.seller_type === 'dealer'}
+                onChange={(e) => setForm({ ...form, seller_type: e.target.value })}
+                className="text-primary-600 focus:ring-primary-500"
+              />
+              <span>Dealer</span>
+            </label>
+          </div>
+          <p className="text-slate-500 text-sm mt-1">
+            This helps buyers filter listings. Private sellers list their own trucks; dealers represent a business.
+          </p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Company/Dealership Name <span className="text-slate-400">(optional)</span>
           </label>
@@ -192,7 +230,7 @@ export default function SellerProfile() {
             className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
           <p className="text-slate-500 text-sm mt-1">
-            Leave blank if you're a private seller.
+            Leave blank if you&apos;re a private seller.
           </p>
         </div>
 
@@ -211,6 +249,29 @@ export default function SellerProfile() {
         >
           {saving ? 'Saving...' : fromListing ? 'Save & Continue to List Truck' : 'Save Profile'}
         </button>
+
+        <div className="mt-12 pt-8 border-t border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete account</h3>
+          <p className="text-slate-600 text-sm mb-4">
+            Permanently delete your account and all your listings. This cannot be undone.
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              if (!confirm('Are you sure? This will permanently delete your account and all your listings. This cannot be undone.')) return;
+              const res = await fetch('/api/account/delete', { method: 'POST', credentials: 'include' });
+              const data = await res.json();
+              if (data.ok) {
+                window.location.href = '/';
+              } else {
+                alert(data.error || 'Failed to delete account');
+              }
+            }}
+            className="text-red-600 hover:text-red-700 font-medium text-sm"
+          >
+            Delete my account
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -344,6 +344,22 @@ export default function EditTruck() {
         >
           Save Changes
         </button>
+
+        <div className="mt-8 pt-6 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={async () => {
+              if (!confirm('Delete this listing? This cannot be undone.')) return;
+              const res = await fetch(`/api/trucks/${id}`, { method: 'DELETE', credentials: 'include' });
+              const data = await res.json();
+              if (data.ok) router.push('/dashboard');
+              else alert(data.error || 'Failed to delete');
+            }}
+            className="text-red-600 hover:text-red-700 font-medium text-sm"
+          >
+            Delete listing
+          </button>
+        </div>
       </form>
     </div>
   );

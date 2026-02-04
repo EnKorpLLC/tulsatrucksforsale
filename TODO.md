@@ -35,3 +35,11 @@
 - [x] Schema – Run in Supabase
 - [x] Stripe – API key, Products/Prices created, Price IDs in `.env.local`
 - [x] Stripe – `stripe_subscription_id` column added to `truck_seller_plans`
+- [x] Delete account in edit profile
+- [x] Mandatory private seller vs dealer in profile
+- [x] Filter listings by private party, dealer, or both
+
+## Schema migration (run in Supabase if not already)
+```sql
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS seller_type TEXT;
+```

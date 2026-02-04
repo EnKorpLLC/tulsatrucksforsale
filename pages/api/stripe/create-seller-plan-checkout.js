@@ -31,6 +31,7 @@ export default async function handler(req, res) {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
+      allow_promotion_codes: true,
       success_url: `${baseUrl}/upgrade-seller/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/upgrade-seller/${sellerId}`,
       metadata: { sellerId, planType: planType || 'pro' },

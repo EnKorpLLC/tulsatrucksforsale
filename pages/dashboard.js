@@ -341,6 +341,19 @@ export default function Dashboard() {
                           Boost
                         </Link>
                       )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!confirm('Delete this listing? This cannot be undone.')) return;
+                          const res = await fetch(`/api/trucks/${truck.id}`, { method: 'DELETE', credentials: 'include' });
+                          const data = await res.json();
+                          if (data.ok) fetchTrucks(seller.id);
+                          else alert(data.error || 'Failed to delete');
+                        }}
+                        className="bg-red-500/90 hover:bg-red-500 text-white px-3 py-1 rounded text-sm font-medium shadow"
+                      >
+                        Delete
+                      </button>
                     </div>
                     {truck.is_featured && truck.featured_until && new Date(truck.featured_until) > new Date() && (
                       <div className="absolute top-2 left-2">

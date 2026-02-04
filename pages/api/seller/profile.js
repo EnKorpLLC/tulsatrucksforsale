@@ -31,13 +31,16 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { name, phone, company, profile_picture_url } = req.body;
+    const { name, phone, company, profile_picture_url, seller_type } = req.body;
 
     if (!name?.trim()) {
       return res.status(400).json({ error: 'Name is required' });
     }
     if (!phone?.trim()) {
       return res.status(400).json({ error: 'Phone number is required' });
+    }
+    if (!seller_type || !['private', 'dealer'].includes(seller_type)) {
+      return res.status(400).json({ error: 'Please select whether you are a private seller or a dealer' });
     }
 
     // Check if user already has a seller profile
@@ -66,6 +69,7 @@ export default async function handler(req, res) {
             phone: phone.trim(),
             company: company?.trim() || null,
             profile_picture_url: profile_picture_url || null,
+            seller_type: seller_type,
           })
           .eq('id', byEmail.id)
           .select()
@@ -115,6 +119,7 @@ export default async function handler(req, res) {
       name: name.trim(),
       phone: phone.trim(),
       company: company?.trim() || null,
+      seller_type: seller_type,
     };
     if (profile_picture_url !== undefined) {
       updateData.profile_picture_url = profile_picture_url || null;

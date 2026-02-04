@@ -7,13 +7,26 @@ export default async function handler(req, res) {
   const { email, password, name } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
+  const emailLower = email.trim().toLowerCase();
+  const { data: existing } = await supabase
+    .from('truck_profiles')
+    .select('id')
+    .ilike('email', emailLower)
+    .limit(1);
+  if (existing?.length) {
+    return res.status(400).json({ error: 'An account with this email already exists. Sign in or use a different email.' });
+  }
+
   const { data: authData, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim().toLowerCase(),
     password,
     options: { data: { full_name: name || '' }, emailRedirectTo: undefined },
   });
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    const msg = error.message?.toLowerCase().includes('already') ? 'An account with this email already exists. Sign in or use a different email.' : error.message;
+    return res.status(400).json({ error: msg });
+  }
 
   if (authData?.user) {
     await supabase.from('truck_profiles').upsert({

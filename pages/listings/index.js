@@ -19,6 +19,7 @@ export default function Listings() {
     minPrice: '',
     maxPrice: '',
     status: 'available',
+    sellerType: 'both',
   });
 
   useEffect(() => {
@@ -39,8 +40,19 @@ export default function Listings() {
 
   async function fetchTrucks() {
     setLoading(true);
-    let query = supabase.from('truck_trucks').select('*');
+    let sellerIds = null;
+    if (filters.sellerType && filters.sellerType !== 'both') {
+      const { data: sellers } = await supabase.from('truck_sellers').select('id').eq('seller_type', filters.sellerType);
+      sellerIds = (sellers || []).map((s) => s.id);
+      if (sellerIds.length === 0) {
+        setTrucks([]);
+        setLoading(false);
+        return;
+      }
+    }
 
+    let query = supabase.from('truck_trucks').select('*');
+    if (sellerIds) query = query.in('seller_id', sellerIds);
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.make) query = query.ilike('make', `%${filters.make}%`);
     if (filters.model) query = query.ilike('model', `%${filters.model}%`);
@@ -167,6 +179,18 @@ export default function Listings() {
               <option value="available">Available</option>
               <option value="sold">Sold</option>
               <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Seller type</label>
+            <select
+              value={filters.sellerType}
+              onChange={(e) => setFilters({ ...filters, sellerType: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+            >
+              <option value="both">Both</option>
+              <option value="private">Private party</option>
+              <option value="dealer">Dealer</option>
             </select>
           </div>
         </div>

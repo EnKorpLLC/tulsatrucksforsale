@@ -39,9 +39,12 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'You can only list trucks under your own seller profile' });
       }
 
-      // Check if seller profile is complete (has phone)
+      // Check if seller profile is complete (has phone and seller_type)
       if (!seller.phone) {
         return res.status(400).json({ error: 'PROFILE_INCOMPLETE', message: 'Please complete your seller profile before listing a truck.' });
+      }
+      if (!seller.seller_type || !['private', 'dealer'].includes(seller.seller_type)) {
+        return res.status(400).json({ error: 'PROFILE_INCOMPLETE', message: 'Please update your profile and select whether you are a private seller or dealer.' });
       }
 
       // Check listing limit (only for new "available" listings)
