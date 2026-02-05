@@ -47,44 +47,51 @@ export default function SellerContactCard({ seller, sellerPlan, truckName }) {
           </div>
           {seller.company && <p className="text-slate-600 text-sm">{seller.company}</p>}
 
-          <div className="flex flex-wrap gap-2 mt-3">
-            {seller.phone && (
-              <>
+          {/* Only show contact buttons if at least one method is visible */}
+          {((!seller.hide_phone && seller.phone) || (!seller.hide_email && seller.email)) && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {seller.phone && !seller.hide_phone && (
+                <>
+                  <a
+                    href={phoneForLink}
+                    className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    Call
+                  </a>
+                  <a
+                    href={smsForLink}
+                    className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    Text
+                  </a>
+                </>
+              )}
+              {seller.email && !seller.hide_email && (
                 <a
-                  href={phoneForLink}
-                  className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  Call
-                </a>
-                <a
-                  href={smsForLink}
-                  className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition"
+                  href={`mailto:${seller.email}?subject=${encodeURIComponent(subject)}`}
+                  className="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium py-2 px-3 rounded-lg transition"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
-                  Text
+                  Email
                 </a>
-              </>
-            )}
-            {seller.email && (
-              <a
-                href={`mailto:${seller.email}?subject=${encodeURIComponent(subject)}`}
-                className="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium py-2 px-3 rounded-lg transition"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-                Email
-              </a>
-            )}
-          </div>
-          <p className="text-slate-500 text-sm mt-3">Contact the seller directly to make an offer—no account required.</p>
+              )}
+            </div>
+          )}
+          <p className="text-slate-500 text-sm mt-3">
+            {(!seller.hide_phone && seller.phone) || (!seller.hide_email && seller.email)
+              ? 'Contact the seller directly to make an offer—no account required.'
+              : 'Use the Message button to contact this seller.'}
+          </p>
         </div>
       </div>
 

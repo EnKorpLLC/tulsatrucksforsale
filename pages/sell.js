@@ -25,7 +25,7 @@ export default function SellYourTruck() {
         <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 text-white py-16 md:py-24">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Sell Your Truck the Easy Way
+              Sell Your Truck For Free!
             </h1>
             <p className="text-xl text-slate-200 mb-8">
               Tulsa&apos;s marketplace for private sellers. List your commercial truck, semi, or pickup—reach serious buyers and connect them with financing.

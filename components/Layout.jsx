@@ -35,7 +35,7 @@ export default function Layout({ children }) {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/" className="text-slate-400 hover:text-white transition">Browse Trucks</Link></li>
                 <li><Link href="/advertise" className="text-slate-400 hover:text-white transition">Advertise</Link></li>
-                <li><Link href="/sell" className="text-slate-400 hover:text-white transition">Sell Your Truck</Link></li>
+                <li><Link href="/sell" className="text-slate-400 hover:text-white transition">Sell Your Truck For Free!</Link></li>
                 <li><Link href="/terms" className="text-slate-400 hover:text-white transition">Terms &amp; Conditions</Link></li>
                 <li><Link href="/privacy" className="text-slate-400 hover:text-white transition">Privacy Policy</Link></li>
               </ul>

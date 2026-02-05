@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [authChecked, setAuthChecked] = useState(false);
   const [adsModal, setAdsModal] = useState(null);
   const [leadModal, setLeadModal] = useState(null);
+  const [reports, setReports] = useState([]);
 
   useEffect(() => {
     fetch('/api/admin/me')
@@ -36,13 +37,14 @@ export default function AdminDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    const [t, s, f, n, r, a, statsRes] = await Promise.all([
+    const [t, s, f, n, r, a, rep, statsRes] = await Promise.all([
       supabase.from('truck_trucks').select('*, seller:truck_sellers(name, email)').order('created_at', { ascending: false }),
       supabase.from('truck_sellers').select('*').order('name'),
       supabase.from('truck_financing_requests').select('*, truck:truck_trucks(make, model, year), buyer:truck_buyers(name, email, phone)').order('created_at', { ascending: false }),
       supabase.from('truck_tasks_notes').select('*').order('created_at', { ascending: false }),
       supabase.from('truck_automation_rules').select('*').order('name'),
       supabase.from('truck_ads').select('*').order('created_at', { ascending: false }),
+      supabase.from('truck_message_reports').select('*').order('created_at', { ascending: false }),
       fetch('/api/admin/stats').then((r) => r.json()),
     ]);
     setTrucks(t.data || []);
@@ -51,6 +53,7 @@ export default function AdminDashboard() {
     setNotes(n.data || []);
     setRules(r.data || []);
     setAds(a.data || []);
+    setReports(rep.data || []);
     setStats(statsRes);
     setLoading(false);
   }
@@ -108,7 +111,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="flex gap-2 border-b border-slate-200 mb-8 overflow-x-auto">
-        {['stats', 'trucks', 'featured', 'sellers', 'financing', 'ads', 'notes', 'rules'].map((t) => (
+        {['stats', 'trucks', 'featured', 'sellers', 'financing', 'ads', 'reports', 'notes', 'rules'].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -469,6 +472,84 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {tab === 'reports' && (
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="p-4 border-b border-slate-200">
+                <h3 className="font-semibold text-slate-900">Message Reports</h3>
+                <p className="text-slate-500 text-sm mt-1">Review reported users and take action.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Reported User</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Reporter</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Reason</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Details</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {reports.map((report) => (
+                      <tr key={report.id} className={report.status === 'pending' ? 'bg-amber-50' : ''}>
+                        <td className="px-4 py-3 text-sm font-medium">{report.reported_user_id?.slice(0, 8)}...</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{report.reporter_id?.slice(0, 8)}...</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            report.reason === 'scam' ? 'bg-red-100 text-red-800' :
+                            report.reason === 'harassment' ? 'bg-orange-100 text-orange-800' :
+                            report.reason === 'spam' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-slate-100 text-slate-800'
+                          }`}>
+                            {report.reason}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
+                          {report.details || '—'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={report.status}
+                            onChange={async (e) => {
+                              await supabase.from('truck_message_reports')
+                                .update({ status: e.target.value, reviewed_at: new Date().toISOString() })
+                                .eq('id', report.id);
+                              loadAll();
+                            }}
+                            className="text-sm border border-slate-300 rounded px-2 py-1"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="action_taken">Action Taken</option>
+                            <option value="dismissed">Dismissed</option>
+                          </select>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 text-sm">
+                          {new Date(report.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          {report.conversation_id && (
+                            <a
+                              href={`/messages/${report.conversation_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary-600 hover:underline text-sm"
+                            >
+                              View Chat
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {reports.length === 0 && <p className="p-8 text-center text-slate-500">No reports yet.</p>}
             </div>
           )}
 

@@ -6,6 +6,7 @@ import FinancingForm from '../../components/FinancingForm';
 import Ads from '../../components/Ads';
 import SellerContactCard from '../../components/SellerContactCard';
 import SaveTruckButton from '../../components/SaveTruckButton';
+import MessageButton from '../../components/MessageButton';
 
 export default function TruckDetail() {
   const router = useRouter();
@@ -223,11 +224,25 @@ export default function TruckDetail() {
           )}
 
           {seller && (
-            <SellerContactCard
-              seller={seller}
-              sellerPlan={sellerPlan}
-              truckName={`${truck.year} ${truck.make} ${truck.model}`}
-            />
+            <>
+              <SellerContactCard
+                seller={seller}
+                sellerPlan={sellerPlan}
+                truckName={`${truck.year} ${truck.make} ${truck.model}`}
+              />
+              {seller.user_id && (
+                <div className="mt-4">
+                  <MessageButton
+                    sellerId={seller.user_id}
+                    sellerName={seller.name}
+                    truckId={truck.id}
+                    truckTitle={`${truck.year} ${truck.make} ${truck.model}`}
+                    user={user ? { id: user.id || user.user_id } : null}
+                    className="w-full justify-center"
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {truck.status === 'available' && (

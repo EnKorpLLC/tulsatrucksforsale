@@ -67,6 +67,8 @@ ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS profile_picture_url TEXT;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS seller_type TEXT;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS city TEXT;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS state TEXT;
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS hide_email BOOLEAN DEFAULT false;
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS hide_phone BOOLEAN DEFAULT false;
 
 -- Seller reviews (buyers can rate sellers)
 CREATE TABLE IF NOT EXISTS truck_seller_reviews (
@@ -253,6 +255,71 @@ CREATE TABLE IF NOT EXISTS truck_automation_rules (
 );
 
 -- ============================================================
+-- MESSAGING SYSTEM
+-- ============================================================
+
+-- Conversations (threads between users, optionally about a truck)
+CREATE TABLE IF NOT EXISTS truck_conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  truck_id UUID REFERENCES truck_trucks(id) ON DELETE SET NULL,
+  participant_1 UUID NOT NULL,  -- user_id from truck_profiles
+  participant_2 UUID NOT NULL,  -- user_id from truck_profiles
+  last_message_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for conversations
+CREATE INDEX IF NOT EXISTS idx_truck_conversations_participant_1 ON truck_conversations(participant_1);
+CREATE INDEX IF NOT EXISTS idx_truck_conversations_participant_2 ON truck_conversations(participant_2);
+CREATE INDEX IF NOT EXISTS idx_truck_conversations_last_message ON truck_conversations(last_message_at DESC);
+
+-- Individual messages
+CREATE TABLE IF NOT EXISTS truck_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID REFERENCES truck_conversations(id) ON DELETE CASCADE NOT NULL,
+  sender_id UUID NOT NULL,  -- user_id
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for messages
+CREATE INDEX IF NOT EXISTS idx_truck_messages_conversation ON truck_messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_truck_messages_created ON truck_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_truck_messages_unread ON truck_messages(conversation_id, is_read) WHERE is_read = false;
+
+-- Blocked users (user blocks another user)
+CREATE TABLE IF NOT EXISTS truck_blocked_users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  blocker_id UUID NOT NULL,  -- user who is blocking
+  blocked_id UUID NOT NULL,  -- user being blocked
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(blocker_id, blocked_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_truck_blocked_users_blocker ON truck_blocked_users(blocker_id);
+CREATE INDEX IF NOT EXISTS idx_truck_blocked_users_blocked ON truck_blocked_users(blocked_id);
+
+-- Reported messages (for admin moderation)
+CREATE TABLE IF NOT EXISTS truck_message_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  message_id UUID REFERENCES truck_messages(id) ON DELETE SET NULL,
+  conversation_id UUID REFERENCES truck_conversations(id) ON DELETE SET NULL,
+  reporter_id UUID NOT NULL,  -- user who reported
+  reported_user_id UUID NOT NULL,  -- user being reported
+  reason TEXT NOT NULL,  -- harassment, spam, scam, inappropriate, other
+  details TEXT,  -- additional details from reporter
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'action_taken', 'dismissed')),
+  admin_notes TEXT,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by UUID,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_truck_message_reports_status ON truck_message_reports(status);
+CREATE INDEX IF NOT EXISTS idx_truck_message_reports_created ON truck_message_reports(created_at DESC);
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 
@@ -272,6 +339,10 @@ ALTER TABLE truck_automation_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE truck_payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE truck_seller_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE truck_saved_listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE truck_conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE truck_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE truck_blocked_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE truck_message_reports ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- POLICIES (Drop if exist, then create)
@@ -297,6 +368,10 @@ DROP POLICY IF EXISTS "truck_allow_all_automation" ON truck_automation_rules;
 DROP POLICY IF EXISTS "truck_allow_all_payments" ON truck_payments;
 DROP POLICY IF EXISTS "truck_allow_all_seller_reviews" ON truck_seller_reviews;
 DROP POLICY IF EXISTS "truck_allow_all_saved_listings" ON truck_saved_listings;
+DROP POLICY IF EXISTS "truck_allow_all_conversations" ON truck_conversations;
+DROP POLICY IF EXISTS "truck_allow_all_messages" ON truck_messages;
+DROP POLICY IF EXISTS "truck_allow_all_blocked_users" ON truck_blocked_users;
+DROP POLICY IF EXISTS "truck_allow_all_message_reports" ON truck_message_reports;
 
 -- Create policies
 CREATE POLICY "truck_allow_all_profiles" ON truck_profiles FOR ALL USING (true) WITH CHECK (true);
@@ -318,6 +393,10 @@ CREATE POLICY "truck_allow_all_automation" ON truck_automation_rules FOR ALL USI
 CREATE POLICY "truck_allow_all_payments" ON truck_payments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "truck_allow_all_seller_reviews" ON truck_seller_reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "truck_allow_all_saved_listings" ON truck_saved_listings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "truck_allow_all_conversations" ON truck_conversations FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "truck_allow_all_messages" ON truck_messages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "truck_allow_all_blocked_users" ON truck_blocked_users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "truck_allow_all_message_reports" ON truck_message_reports FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================
 -- STORAGE BUCKET (create manually in Supabase Dashboard)

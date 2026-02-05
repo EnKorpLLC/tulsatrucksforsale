@@ -180,7 +180,7 @@ export default function Home() {
                 href="/sell"
                 className="inline-flex items-center border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold px-4 py-2 rounded-lg transition text-sm"
               >
-                List Your Truck
+                List Your Truck For Free!
               </Link>
             </div>
           </div>

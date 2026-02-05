@@ -18,6 +18,8 @@ export default function SellerProfile() {
     seller_type: '',
     city: '',
     state: '',
+    hide_email: false,
+    hide_phone: false,
   });
 
   // Check if redirected from trying to list a truck
@@ -51,6 +53,8 @@ export default function SellerProfile() {
             seller_type: data.seller.seller_type || '',
             city: data.seller.city || '',
             state: data.seller.state || '',
+            hide_email: data.seller.hide_email || false,
+            hide_phone: data.seller.hide_phone || false,
           });
           setProfilePictureUrl(data.seller.profile_picture_url || '');
         }
@@ -261,6 +265,42 @@ export default function SellerProfile() {
               maxLength={2}
               className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
+          </div>
+        </div>
+
+        {/* Contact Visibility Settings */}
+        <div className="pt-6 border-t border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">Contact Visibility</h3>
+          <p className="text-slate-500 text-sm mb-4">
+            Choose which contact options buyers can see on your listings. The Message button will always be available.
+          </p>
+          
+          <div className="space-y-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.hide_email}
+                onChange={(e) => setForm({ ...form, hide_email: e.target.checked })}
+                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded"
+              />
+              <div>
+                <span className="font-medium text-slate-700">Do Not Show Email Option</span>
+                <p className="text-slate-500 text-sm">Hide the &quot;Email&quot; button on your listings. Buyers won&apos;t see your email address.</p>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.hide_phone}
+                onChange={(e) => setForm({ ...form, hide_phone: e.target.checked })}
+                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded"
+              />
+              <div>
+                <span className="font-medium text-slate-700">Do Not Show Call or Text Option</span>
+                <p className="text-slate-500 text-sm">Hide the &quot;Call&quot; and &quot;Text&quot; buttons on your listings. Your phone number won&apos;t be visible to buyers.</p>
+              </div>
+            </label>
           </div>
         </div>
 
