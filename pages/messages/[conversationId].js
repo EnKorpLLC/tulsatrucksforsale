@@ -206,7 +206,7 @@ export default function ConversationThread() {
 
   if (!user || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="fixed inset-0 top-16 md:top-[100px] flex items-center justify-center bg-white">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
@@ -214,7 +214,7 @@ export default function ConversationThread() {
 
   if (!conversation) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="fixed inset-0 top-16 md:top-[100px] flex items-center justify-center bg-white">
         <div className="text-center">
           <p className="text-slate-600 mb-4">Conversation not found</p>
           <Link href="/messages" className="text-primary-600 hover:underline">
@@ -233,9 +233,9 @@ export default function ConversationThread() {
         <title>Chat with {conversation.otherUser.name} | Tulsa Trucks</title>
       </Head>
 
-      <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)] flex flex-col">
+      <div className="fixed inset-0 top-16 md:top-[100px] flex flex-col bg-white">
         {/* Header */}
-        <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-4">
+        <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-4">
           <Link href="/messages" className="text-slate-400 hover:text-slate-600">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -303,7 +303,7 @@ export default function ConversationThread() {
 
         {/* Truck context card */}
         {conversation.truck && (
-          <Link href={`/trucks/${conversation.truck.id}`} className="block bg-slate-50 border-b border-slate-200 px-4 py-3 hover:bg-slate-100 transition">
+          <Link href={`/trucks/${conversation.truck.id}`} className="flex-shrink-0 block bg-slate-50 border-b border-slate-200 px-4 py-3 hover:bg-slate-100 transition">
             <div className="flex items-center gap-3">
               {conversation.truck.photo && (
                 <img
@@ -324,7 +324,7 @@ export default function ConversationThread() {
 
         {/* Blocked notice */}
         {conversation.isBlocked && (
-          <div className="bg-red-50 border-b border-red-200 px-4 py-3 text-center">
+          <div className="flex-shrink-0 bg-red-50 border-b border-red-200 px-4 py-3 text-center">
             <p className="text-red-700 text-sm">
               {conversation.blockedByMe 
                 ? 'You have blocked this user.' 
@@ -334,7 +334,7 @@ export default function ConversationThread() {
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
           {messageGroups.map((item, idx) => {
             if (item.type === 'date') {
               return (
@@ -372,7 +372,7 @@ export default function ConversationThread() {
 
         {/* Message input */}
         {!conversation.isBlocked && (
-          <form onSubmit={handleSend} className="bg-white border-t border-slate-200 px-4 py-3">
+          <form onSubmit={handleSend} className="flex-shrink-0 bg-white border-t border-slate-200 px-4 py-3">
             <div className="flex gap-3">
               <input
                 type="text"
