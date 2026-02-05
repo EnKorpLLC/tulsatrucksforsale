@@ -59,3 +59,7 @@ export default function AdvertiseSuccess() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { supabase } from '../../../../lib/supabase';
 import { getPhotoLimit, getListingLimit, isProSeller } from '../../../../lib/sellerPlan';
 import PhotoUpload from '../../../../components/PhotoUpload';
+import { TRUCK_MAKES, getModelsForMake, TRUCK_YEARS, TRUCK_CONDITIONS } from '../../../../lib/truckOptions';
 
 export default function EditTruck() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function EditTruck() {
   const [seller, setSeller] = useState(null);
   const [sellerPlan, setSellerPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [truck, setTruck] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
@@ -84,8 +86,9 @@ export default function EditTruck() {
         description: data.description || '',
         vin: data.vin || '',
         status: data.status || 'available',
-        city: data.city || '',
-        state: data.state || '',
+        condition: data.vehicle_condition || data.condition || '',
+        city: data.city || seller.city || '',
+        state: data.state || seller.state || '',
       });
       setLoading(false);
     });
@@ -111,10 +114,17 @@ export default function EditTruck() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setSaving(true);
 
+    if (!form.city?.trim() || !form.state?.trim()) {
+      alert('City and State are required.');
+      setSaving(false);
+      return;
+    }
     const maxPhotos = getPhotoLimit(sellerPlan);
     if (photos.length > maxPhotos) {
       alert(`Your plan allows ${maxPhotos} photos. Upgrade for 15 photos.`);
+      setSaving(false);
       return;
     }
 
@@ -130,13 +140,16 @@ export default function EditTruck() {
       const limit = getListingLimit(sellerPlan);
       if ((otherAvailable.data?.length || 0) >= limit) {
         alert(`Your plan allows ${limit} active listing${limit === 1 ? '' : 's'}. Upgrade to add more.`);
+        setSaving(false);
         return;
       }
     }
 
-    const { error } = await supabase
-      .from('truck_trucks')
-      .update({
+    const res = await fetch(`/api/trucks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
         make: form.make,
         model: form.model,
         year: parseInt(form.year),
@@ -145,15 +158,17 @@ export default function EditTruck() {
         description: form.description || null,
         vin: form.vin || null,
         status: form.status,
+        condition: form.condition || null,
         city: form.city || null,
         state: form.state || null,
         photos,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+      }),
+    });
+    const data = await res.json();
 
-    if (error) {
-      alert(error.message);
+    setSaving(false);
+    if (!data.ok) {
+      alert(data.error || 'Failed to save changes');
       return;
     }
     router.push('/dashboard');
@@ -189,45 +204,107 @@ export default function EditTruck() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Make *</label>
-            <input
-              type="text"
+            <select
               required
               value={form.make}
-              onChange={(e) => setForm({ ...form, make: e.target.value })}
+              onChange={(e) => setForm({ ...form, make: e.target.value, model: '' })}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
-            />
+            >
+              <option value="">Select make</option>
+              {TRUCK_MAKES.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Model *</label>
-            <input
-              type="text"
-              required
-              value={form.model}
-              onChange={(e) => setForm({ ...form, model: e.target.value })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2"
-            />
+            {form.make === 'Other' || (form.make && form.model && !getModelsForMake(form.make).includes(form.model)) ? (
+              <input
+                type="text"
+                required
+                value={form.model}
+                onChange={(e) => setForm({ ...form, model: e.target.value })}
+                placeholder="Enter model"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              />
+            ) : (
+              <select
+                required
+                value={form.model}
+                onChange={(e) => setForm({ ...form, model: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              >
+                <option value="">Select model</option>
+                {getModelsForMake(form.make).map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Year *</label>
-            <input
-              type="number"
+            <select
               required
               value={form.year}
               onChange={(e) => setForm({ ...form, year: e.target.value })}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              min="1900"
-              max="2030"
+            >
+              <option value="">Select year</option>
+              {TRUCK_YEARS.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Condition *</label>
+            <select
+              required
+              value={form.condition}
+              onChange={(e) => setForm({ ...form, condition: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+            >
+              <option value="">Select condition</option>
+              {TRUCK_CONDITIONS.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Mileage</label>
+          <input
+            type="number"
+            value={form.mileage}
+            onChange={(e) => setForm({ ...form, mileage: e.target.value })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 max-w-xs"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">City <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              required
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder={seller?.city ? '' : 'e.g. Tulsa'}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Mileage</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">State <span className="text-red-500">*</span></label>
             <input
-              type="number"
-              value={form.mileage}
-              onChange={(e) => setForm({ ...form, mileage: e.target.value })}
+              type="text"
+              required
+              value={form.state}
+              onChange={(e) => setForm({ ...form, state: e.target.value })}
+              placeholder={seller?.state ? '' : 'e.g. OK'}
+              maxLength={2}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
             />
           </div>
@@ -340,9 +417,10 @@ export default function EditTruck() {
 
         <button
           type="submit"
-          className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-lg transition"
+          disabled={saving}
+          className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition"
         >
-          Save Changes
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
 
         <div className="mt-8 pt-6 border-t border-slate-200">
@@ -363,4 +441,8 @@ export default function EditTruck() {
       </form>
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

@@ -42,4 +42,5 @@
 ## Schema migration (run in Supabase if not already)
 ```sql
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS seller_type TEXT;
+ALTER TABLE truck_trucks ADD COLUMN IF NOT EXISTS vehicle_condition TEXT;
 ```

@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS truck_sellers (
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS user_id UUID UNIQUE;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS profile_picture_url TEXT;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS seller_type TEXT;
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS state TEXT;
 
 -- Seller reviews (buyers can rate sellers)
 CREATE TABLE IF NOT EXISTS truck_seller_reviews (
@@ -110,6 +112,11 @@ CREATE TABLE IF NOT EXISTS truck_trucks (
 -- Add featured listing columns (safe if already exist)
 ALTER TABLE truck_trucks ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;
 ALTER TABLE truck_trucks ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ;
+-- Use vehicle_condition (not "condition" - PostgreSQL reserved keyword)
+ALTER TABLE truck_trucks ADD COLUMN IF NOT EXISTS vehicle_condition TEXT;
+-- Ensure city/state exist (in case table was created from older schema)
+ALTER TABLE truck_trucks ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE truck_trucks ADD COLUMN IF NOT EXISTS state TEXT;
 
 -- Saved trucks (Trucks I'm Interested In)
 CREATE TABLE IF NOT EXISTS truck_saved_listings (

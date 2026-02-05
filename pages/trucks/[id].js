@@ -17,10 +17,19 @@ export default function TruckDetail() {
   const [activePhoto, setActivePhoto] = useState(0);
   const [showFinancing, setShowFinancing] = useState(false);
   const [user, setUser] = useState(null);
+  const [currentSeller, setCurrentSeller] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   useEffect(() => {
     fetch('/api/auth/me').then((r) => r.json()).then((d) => setUser(d.user));
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetch('/api/seller/profile').then((r) => r.json()).then((d) => {
+        if (d.seller) setCurrentSeller(d.seller);
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user && id) {
@@ -59,10 +68,11 @@ export default function TruckDetail() {
 
   const photos = truck.photos && Array.isArray(truck.photos) ? truck.photos : [];
   const mainPhoto = photos[activePhoto] || 'https://via.placeholder.com/800x500?text=Truck';
+  const isOwner = !!currentSeller && truck.seller_id === currentSeller.id;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <Link href="/listings" className="text-primary-600 hover:text-primary-700 font-medium mb-6 inline-block">← Back to Listings</Link>
+      <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium mb-6 inline-block">← Back to Listings</Link>
 
       {!user && (
         <div
@@ -111,27 +121,47 @@ export default function TruckDetail() {
         </div>
 
         <div>
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
             <h1 className="text-3xl font-bold text-slate-900">
               {truck.year} {truck.make} {truck.model}
             </h1>
-            {user && (
-              <SaveTruckButton
-                truckId={id}
-                isSaved={isSaved}
-                variant="detail"
-                onToggle={async (tid, saved) => {
-                  const method = saved ? 'DELETE' : 'POST';
-                  const res = await fetch(`/api/saved/${tid}`, { method, credentials: 'include' });
-                  const data = await res.json();
-                  if (data.ok) {
-                    setIsSaved(!saved);
-                  } else if (data.code === 'PROFILE_INCOMPLETE') {
-                    router.push('/seller/profile?required=1');
-                  }
-                }}
-              />
-            )}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {isOwner && (
+                <>
+                  <Link
+                    href={`/seller/trucks/${truck.id}/edit`}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium py-2 px-4 rounded-lg transition text-sm"
+                  >
+                    Edit
+                  </Link>
+                  {!(truck.is_featured && truck.featured_until && new Date(truck.featured_until) > new Date()) && (
+                    <Link
+                      href={`/boost-listing/${truck.id}`}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold py-2 px-4 rounded-lg transition text-sm"
+                    >
+                      Boost
+                    </Link>
+                  )}
+                </>
+              )}
+              {user && (
+                <SaveTruckButton
+                  truckId={id}
+                  isSaved={isSaved}
+                  variant="detail"
+                  onToggle={async (tid, saved) => {
+                    const method = saved ? 'DELETE' : 'POST';
+                    const res = await fetch(`/api/saved/${tid}`, { method, credentials: 'include' });
+                    const data = await res.json();
+                    if (data.ok) {
+                      setIsSaved(!saved);
+                    } else if (data.code === 'PROFILE_INCOMPLETE') {
+                      router.push('/seller/profile?required=1');
+                    }
+                  }}
+                />
+              )}
+            </div>
           </div>
           <p className="text-2xl font-bold text-primary-600 mt-2">
             ${Number(truck.price).toLocaleString()}
@@ -143,7 +173,7 @@ export default function TruckDetail() {
             <span className="inline-block mt-2 ml-2 bg-accent-500/20 text-accent-600 px-3 py-1 rounded-full text-sm font-semibold">Featured</span>
           )}
 
-          {truck.status === 'available' && (
+          {truck.status === 'available' && isOwner && (
             <Link
               href={`/boost-listing/${truck.id}`}
               className="inline-block mt-2 bg-accent-500 hover:bg-accent-600 text-slate-900 font-semibold py-2 px-4 rounded-lg transition"
@@ -152,15 +182,18 @@ export default function TruckDetail() {
             </Link>
           )}
 
-          {(truck.city || truck.state) && (
-            <p className="text-slate-600 text-sm mt-2">
-              📍 {[truck.city, truck.state].filter(Boolean).join(', ')}
-            </p>
-          )}
           <dl className="mt-8 grid grid-cols-2 gap-4">
+            <div>
+              <dt className="text-slate-500 text-sm">Location</dt>
+              <dd className="font-medium">{(truck.city || truck.state) ? [truck.city, truck.state].filter(Boolean).join(', ') : '—'}</dd>
+            </div>
             <div>
               <dt className="text-slate-500 text-sm">Year</dt>
               <dd className="font-medium">{truck.year}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500 text-sm">Condition</dt>
+              <dd className="font-medium capitalize">{truck.vehicle_condition || truck.condition || '—'}</dd>
             </div>
             <div>
               <dt className="text-slate-500 text-sm">Mileage</dt>
@@ -237,4 +270,8 @@ export default function TruckDetail() {
       </div>
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

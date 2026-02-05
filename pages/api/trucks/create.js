@@ -43,6 +43,9 @@ export default async function handler(req, res) {
       if (!seller.phone) {
         return res.status(400).json({ error: 'PROFILE_INCOMPLETE', message: 'Please complete your seller profile before listing a truck.' });
       }
+      if (!truckData.city?.trim() || !truckData.state?.trim()) {
+        return res.status(400).json({ error: 'City and State are required.' });
+      }
       if (!seller.seller_type || !['private', 'dealer'].includes(seller.seller_type)) {
         return res.status(400).json({ error: 'PROFILE_INCOMPLETE', message: 'Please update your profile and select whether you are a private seller or dealer.' });
       }
@@ -66,6 +69,11 @@ export default async function handler(req, res) {
     }
 
     const insertData = { ...truckData };
+    // Map condition to vehicle_condition (PostgreSQL reserves "condition")
+    if (truckData.condition !== undefined) {
+      insertData.vehicle_condition = truckData.condition || null;
+      delete insertData.condition;
+    }
     if (city !== undefined) insertData.city = city || null;
     if (state !== undefined) insertData.state = state || null;
 

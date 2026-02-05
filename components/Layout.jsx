@@ -33,7 +33,7 @@ export default function Layout({ children }) {
             <div>
               <h4 className="text-white font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/listings" className="text-slate-400 hover:text-white transition">Browse Trucks</Link></li>
+                <li><Link href="/" className="text-slate-400 hover:text-white transition">Browse Trucks</Link></li>
                 <li><Link href="/advertise" className="text-slate-400 hover:text-white transition">Advertise</Link></li>
                 <li><Link href="/sell" className="text-slate-400 hover:text-white transition">Sell Your Truck</Link></li>
                 <li><Link href="/terms" className="text-slate-400 hover:text-white transition">Terms &amp; Conditions</Link></li>

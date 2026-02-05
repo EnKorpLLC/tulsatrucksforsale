@@ -115,3 +115,7 @@ export default function UpgradeSeller() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

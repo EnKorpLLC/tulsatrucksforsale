@@ -38,7 +38,7 @@ export default function BoostSuccess() {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <p className="text-red-600 font-medium mb-4">Something went wrong. Please contact support if you were charged.</p>
-        <Link href="/listings" className="text-primary-600 hover:underline">Back to listings</Link>
+        <Link href="/" className="text-primary-600 hover:underline">Back to listings</Link>
       </div>
     );
   }
@@ -57,4 +57,8 @@ export default function BoostSuccess() {
       )}
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

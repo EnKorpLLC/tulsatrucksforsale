@@ -95,3 +95,7 @@ export default function VerifyEmail() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

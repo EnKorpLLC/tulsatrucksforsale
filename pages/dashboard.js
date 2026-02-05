@@ -265,13 +265,14 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold text-slate-900 mb-4">Trucks I&apos;m Interested In</h2>
           {hasCompleteProfile ? (
             savedTrucks.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {savedTrucks.map((truck) => (
                   <div key={truck.id} className="relative">
                     <TruckCard
                       truck={truck}
                       showSaveButton
                       isSaved={savedIds.has(truck.id)}
+                      isOwner={!!seller && truck.seller_id === seller.id}
                       onSaveToggle={async (tid, saved) => {
                         const method = saved ? 'DELETE' : 'POST';
                         const res = await fetch(`/api/saved/${tid}`, { method, credentials: 'include' });
@@ -295,7 +296,7 @@ export default function Dashboard() {
                 <p className="text-slate-600 mb-4">No saved trucks yet.</p>
                 <p className="text-slate-500 text-sm mb-4">Browse listings and click the save icon on trucks you like.</p>
                 <Link
-                  href="/listings"
+                  href="/"
                   className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition"
                 >
                   Browse Trucks
@@ -322,25 +323,11 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold text-slate-900 mb-4">My Trucks</h2>
           {hasCompleteProfile ? (
             trucks.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {trucks.map((truck) => (
                   <div key={truck.id} className="relative">
-                    <TruckCard truck={truck} />
-                    <div className="absolute top-2 right-2 flex gap-2 z-10">
-                      <Link
-                        href={`/seller/trucks/${truck.id}/edit`}
-                        className="bg-white/90 hover:bg-white text-slate-800 px-3 py-1 rounded text-sm font-medium shadow"
-                      >
-                        Edit
-                      </Link>
-                      {!truck.is_featured && (
-                        <Link
-                          href={`/boost-listing/${truck.id}`}
-                          className="bg-amber-500/90 hover:bg-amber-500 text-slate-900 px-3 py-1 rounded text-sm font-medium shadow"
-                        >
-                          Boost
-                        </Link>
-                      )}
+                    <TruckCard truck={truck} isOwner={!!seller && truck.seller_id === seller.id} />
+                    <div className="absolute top-1.5 right-1.5 flex gap-1.5 z-10">
                       <button
                         type="button"
                         onClick={async () => {
@@ -350,7 +337,7 @@ export default function Dashboard() {
                           if (data.ok) fetchTrucks(seller.id);
                           else alert(data.error || 'Failed to delete');
                         }}
-                        className="bg-red-500/90 hover:bg-red-500 text-white px-3 py-1 rounded text-sm font-medium shadow"
+                        className="bg-red-500/90 hover:bg-red-500 text-white px-2 py-1 rounded text-xs font-medium shadow"
                       >
                         Delete
                       </button>
@@ -391,4 +378,8 @@ export default function Dashboard() {
       )}
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

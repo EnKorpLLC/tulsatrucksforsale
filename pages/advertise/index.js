@@ -152,3 +152,7 @@ export default function Advertise() {
     </>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

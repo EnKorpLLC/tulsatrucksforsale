@@ -149,3 +149,7 @@ export default function BuyAd() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

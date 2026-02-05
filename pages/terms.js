@@ -79,3 +79,7 @@ export default function Terms() {
     </>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

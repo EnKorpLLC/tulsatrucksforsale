@@ -151,3 +151,7 @@ export default function SellYourTruck() {
     </>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

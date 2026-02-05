@@ -56,3 +56,7 @@ export default function UpgradeSuccess() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

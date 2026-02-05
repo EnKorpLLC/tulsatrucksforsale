@@ -16,6 +16,8 @@ export default function SellerProfile() {
     phone: '',
     company: '',
     seller_type: '',
+    city: '',
+    state: '',
   });
 
   // Check if redirected from trying to list a truck
@@ -46,6 +48,9 @@ export default function SellerProfile() {
             name: data.seller.name || user.name || '',
             phone: data.seller.phone || '',
             company: data.seller.company || '',
+            seller_type: data.seller.seller_type || '',
+            city: data.seller.city || '',
+            state: data.seller.state || '',
           });
           setProfilePictureUrl(data.seller.profile_picture_url || '');
         }
@@ -78,7 +83,7 @@ export default function SellerProfile() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...form, profile_picture_url: profilePictureUrl || null, seller_type: form.seller_type }),
+        body: JSON.stringify({ ...form, profile_picture_url: profilePictureUrl || null }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -234,6 +239,31 @@ export default function SellerProfile() {
           </p>
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+            <input
+              type="text"
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="Tulsa"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <p className="text-slate-500 text-sm mt-1">Used to pre-fill your listings.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+            <input
+              type="text"
+              value={form.state}
+              onChange={(e) => setForm({ ...form, state: e.target.value })}
+              placeholder="OK"
+              maxLength={2}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+        </div>
+
         <div className="pt-4 border-t border-slate-200">
           <p className="text-slate-500 text-sm mb-4">
             <strong>Email:</strong> {user?.email}
@@ -275,4 +305,8 @@ export default function SellerProfile() {
       </form>
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

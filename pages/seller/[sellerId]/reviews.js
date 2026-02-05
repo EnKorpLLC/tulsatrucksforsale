@@ -73,7 +73,7 @@ export default function SellerReviewsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <Link href="/listings" className="text-primary-600 hover:underline mb-6 inline-block">← Back to Listings</Link>
+      <Link href="/" className="text-primary-600 hover:underline mb-6 inline-block">← Back to Listings</Link>
 
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-200">
@@ -163,4 +163,8 @@ export default function SellerReviewsPage() {
       )}
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

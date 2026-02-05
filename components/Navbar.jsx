@@ -48,9 +48,6 @@ export default function Navbar() {
               <Link href="/" className="text-slate-700 hover:text-primary-600 font-medium transition">
                 Home
               </Link>
-              <Link href="/listings" className="text-slate-700 hover:text-primary-600 font-medium transition">
-                Browse Trucks
-              </Link>
               {!user && (
                 <>
                   <Link href="/advertise" className="text-slate-700 hover:text-primary-600 font-medium transition">
@@ -111,7 +108,6 @@ export default function Navbar() {
           {mobileOpen && (
             <div className="md:hidden py-4 border-t border-slate-100 space-y-1" role="menu">
               <Link href="/" className="block py-2 px-3 text-slate-700 hover:bg-slate-50 rounded-lg font-medium" onClick={() => setMobileOpen(false)}>Home</Link>
-              <Link href="/listings" className="block py-2 px-3 text-slate-700 hover:bg-slate-50 rounded-lg font-medium" onClick={() => setMobileOpen(false)}>Browse Trucks</Link>
               {!user && (
                 <>
                   <Link href="/advertise" className="block py-2 px-3 text-slate-700 hover:bg-slate-50 rounded-lg font-medium" onClick={() => setMobileOpen(false)}>Advertise</Link>

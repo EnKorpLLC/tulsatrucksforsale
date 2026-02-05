@@ -94,3 +94,7 @@ export default function BoostListing() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}

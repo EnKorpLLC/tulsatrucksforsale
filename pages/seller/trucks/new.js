@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { getPhotoLimit } from '../../../lib/sellerPlan';
 import PhotoUpload from '../../../components/PhotoUpload';
+import { TRUCK_MAKES, getModelsForMake, TRUCK_YEARS, TRUCK_CONDITIONS } from '../../../lib/truckOptions';
 
 export default function NewTruck() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function NewTruck() {
     description: '',
     vin: '',
     status: 'available',
+    condition: '',
     city: '',
     state: '',
   });
@@ -51,11 +53,27 @@ export default function NewTruck() {
           return;
         }
         setSeller(data.seller);
+        setForm((prev) => ({
+          ...prev,
+          city: (data.seller.city || prev.city || '').trim(),
+          state: (data.seller.state || prev.state || '').trim(),
+        }));
         fetchSellerPlan(data.seller.id);
         fetchListingCount();
         setLoading(false);
       });
   }, [user, router]);
+
+  // Prepopulate city/state from seller when seller loads (only if form fields are still empty)
+  useEffect(() => {
+    if (seller && (seller.city || seller.state)) {
+      setForm((prev) => ({
+        ...prev,
+        city: prev.city || seller.city || '',
+        state: prev.state || seller.state || '',
+      }));
+    }
+  }, [seller?.id, seller?.city, seller?.state]);
 
   async function fetchSellerPlan(sellerId) {
     try {
@@ -85,6 +103,10 @@ export default function NewTruck() {
       return;
     }
 
+    if (!form.city?.trim() || !form.state?.trim()) {
+      alert('City and State are required.');
+      return;
+    }
     if (listingCount.count >= listingCount.limit && form.status === 'available') {
       alert(`Your plan allows ${listingCount.limit} active listing${listingCount.limit === 1 ? '' : 's'}. Upgrade to add more.`);
       return;
@@ -110,6 +132,7 @@ export default function NewTruck() {
         description: form.description || null,
         vin: form.vin || null,
         status: form.status,
+        condition: form.condition || null,
         city: form.city || null,
         state: form.state || null,
         photos,
@@ -164,42 +187,77 @@ export default function NewTruck() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Make *</label>
-            <input
-              type="text"
+            <select
               required
               value={form.make}
-              onChange={(e) => setForm({ ...form, make: e.target.value })}
-              placeholder="Ford"
+              onChange={(e) => setForm({ ...form, make: e.target.value, model: '' })}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
-            />
+            >
+              <option value="">Select make</option>
+              {TRUCK_MAKES.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Model *</label>
-            <input
-              type="text"
-              required
-              value={form.model}
-              onChange={(e) => setForm({ ...form, model: e.target.value })}
-              placeholder="F-250"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2"
-            />
+            {form.make === 'Other' || (form.make && form.model && !getModelsForMake(form.make).includes(form.model)) ? (
+              <input
+                type="text"
+                required
+                value={form.model}
+                onChange={(e) => setForm({ ...form, model: e.target.value })}
+                placeholder="Enter model"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              />
+            ) : (
+              <select
+                required
+                value={form.model}
+                onChange={(e) => setForm({ ...form, model: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              >
+                <option value="">Select model</option>
+                {getModelsForMake(form.make).map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Year *</label>
-            <input
-              type="number"
+            <select
               required
               value={form.year}
               onChange={(e) => setForm({ ...form, year: e.target.value })}
-              placeholder="2020"
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              min="1900"
-              max="2030"
-            />
+            >
+              <option value="">Select year</option>
+              {TRUCK_YEARS.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Condition *</label>
+            <select
+              required
+              value={form.condition}
+              onChange={(e) => setForm({ ...form, condition: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+            >
+              <option value="">Select condition</option>
+              {TRUCK_CONDITIONS.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Mileage</label>
             <input
@@ -210,54 +268,54 @@ export default function NewTruck() {
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">City <span className="text-red-500">*</span></label>
             <input
               type="text"
+              required
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
-              placeholder="Tulsa"
+              placeholder={seller?.city ? '' : 'e.g. Tulsa'}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">State <span className="text-red-500">*</span></label>
             <input
               type="text"
+              required
               value={form.state}
               onChange={(e) => setForm({ ...form, state: e.target.value })}
-              placeholder="OK"
+              placeholder={seller?.state ? '' : 'e.g. OK'}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
               maxLength={2}
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Price ($) *</label>
-          <input
-            type="number"
-            required
-            value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
-            placeholder="25000"
-            className="w-full border border-slate-300 rounded-lg px-3 py-2"
-            step="0.01"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">VIN</label>
-          <input
-            type="text"
-            value={form.vin}
-            onChange={(e) => setForm({ ...form, vin: e.target.value })}
-            placeholder="1FTEW1EP..."
-            className="w-full border border-slate-300 rounded-lg px-3 py-2"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Price ($) *</label>
+            <input
+              type="number"
+              required
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              placeholder="25000"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              step="0.01"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">VIN</label>
+            <input
+              type="text"
+              value={form.vin}
+              onChange={(e) => setForm({ ...form, vin: e.target.value })}
+              placeholder="1FTEW1EP..."
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+            />
+          </div>
         </div>
 
         <div>
@@ -328,4 +386,8 @@ export default function NewTruck() {
       </form>
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 }

@@ -512,3 +512,7 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}
