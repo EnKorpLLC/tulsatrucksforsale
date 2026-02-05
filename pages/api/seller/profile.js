@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { name, phone, company, profile_picture_url, seller_type, city, state, hide_email, hide_phone } = req.body;
+    const { name, phone, company, profile_picture_url, seller_type, city, state, hide_email, hide_phone, message_email_pref } = req.body;
 
     if (!name?.trim()) {
       return res.status(400).json({ error: 'Name is required' });
@@ -74,6 +74,7 @@ export default async function handler(req, res) {
             state: state?.trim() || null,
             hide_email: hide_email || false,
             hide_phone: hide_phone || false,
+            message_email_pref: message_email_pref || 'each',
           })
           .eq('id', byEmail.id)
           .select()
@@ -106,6 +107,7 @@ export default async function handler(req, res) {
           state: state?.trim() || null,
           hide_email: hide_email || false,
           hide_phone: hide_phone || false,
+          message_email_pref: message_email_pref || 'each',
         })
         .select()
         .single();
@@ -133,6 +135,7 @@ export default async function handler(req, res) {
       state: state?.trim() || null,
       hide_email: hide_email || false,
       hide_phone: hide_phone || false,
+      message_email_pref: message_email_pref || 'each',
     };
     if (profile_picture_url !== undefined) {
       updateData.profile_picture_url = profile_picture_url || null;

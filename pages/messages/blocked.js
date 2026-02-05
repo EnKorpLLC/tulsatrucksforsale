@@ -126,3 +126,8 @@ export default function BlockedUsers() {
     </>
   );
 }
+
+// Disable static generation - this page requires authentication
+export async function getServerSideProps() {
+  return { props: {} };
+}

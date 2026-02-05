@@ -2,7 +2,7 @@ import Navbar from './Navbar';
 import Head from 'next/head';
 import Link from 'next/link';
 
-export default function Layout({ children }) {
+export default function Layout({ children, hideFooter = false }) {
   return (
     <>
       <Head>
@@ -20,9 +20,10 @@ export default function Layout({ children }) {
         Skip to main content
       </a>
       <Navbar />
-      <main id="main-content" className="min-h-screen bg-white">
+      <main id="main-content" className={`min-h-screen bg-white ${hideFooter ? 'pb-0' : ''}`}>
         {children}
       </main>
+      {!hideFooter && (
       <footer className="bg-slate-900 text-slate-300 py-12 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -54,6 +55,7 @@ export default function Layout({ children }) {
           </div>
         </div>
       </footer>
+      )}
     </>
   );
 }

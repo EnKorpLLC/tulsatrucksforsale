@@ -20,6 +20,7 @@ export default function SellerProfile() {
     state: '',
     hide_email: false,
     hide_phone: false,
+    message_email_pref: 'each',
   });
 
   // Check if redirected from trying to list a truck
@@ -55,6 +56,7 @@ export default function SellerProfile() {
             state: data.seller.state || '',
             hide_email: data.seller.hide_email || false,
             hide_phone: data.seller.hide_phone || false,
+            message_email_pref: data.seller.message_email_pref || 'each',
           });
           setProfilePictureUrl(data.seller.profile_picture_url || '');
         }
@@ -299,6 +301,61 @@ export default function SellerProfile() {
               <div>
                 <span className="font-medium text-slate-700">Do Not Show Call or Text Option</span>
                 <p className="text-slate-500 text-sm">Hide the &quot;Call&quot; and &quot;Text&quot; buttons on your listings. Your phone number won&apos;t be visible to buyers.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Message Email Notifications */}
+        <div className="pt-6 border-t border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">Message Notifications</h3>
+          <p className="text-slate-500 text-sm mb-4">
+            Choose how you want to be notified when someone sends you a message.
+          </p>
+          
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="message_email_pref"
+                value="each"
+                checked={form.message_email_pref === 'each'}
+                onChange={(e) => setForm({ ...form, message_email_pref: e.target.value })}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300"
+              />
+              <div>
+                <span className="font-medium text-slate-700">Email me for each message</span>
+                <p className="text-slate-500 text-sm">Get an email notification every time someone messages you.</p>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="message_email_pref"
+                value="daily"
+                checked={form.message_email_pref === 'daily'}
+                onChange={(e) => setForm({ ...form, message_email_pref: e.target.value })}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300"
+              />
+              <div>
+                <span className="font-medium text-slate-700">Daily digest</span>
+                <p className="text-slate-500 text-sm">Get one email per day summarizing your new messages (if any).</p>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="message_email_pref"
+                value="none"
+                checked={form.message_email_pref === 'none'}
+                onChange={(e) => setForm({ ...form, message_email_pref: e.target.value })}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300"
+              />
+              <div>
+                <span className="font-medium text-slate-700">No email notifications</span>
+                <p className="text-slate-500 text-sm">Don&apos;t send me any emails about messages. I&apos;ll check the site directly.</p>
               </div>
             </label>
           </div>

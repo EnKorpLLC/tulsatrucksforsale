@@ -69,6 +69,8 @@ ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS city TEXT;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS state TEXT;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS hide_email BOOLEAN DEFAULT false;
 ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS hide_phone BOOLEAN DEFAULT false;
+-- Message email notification preference: 'each' (every message), 'daily' (digest), 'none'
+ALTER TABLE truck_sellers ADD COLUMN IF NOT EXISTS message_email_pref TEXT DEFAULT 'each';
 
 -- Seller reviews (buyers can rate sellers)
 CREATE TABLE IF NOT EXISTS truck_seller_reviews (

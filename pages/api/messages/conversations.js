@@ -224,33 +224,44 @@ export default async function handler(req, res) {
         .update({ last_message_at: new Date().toISOString() })
         .eq('id', conversationId);
 
-      // Send email notification to recipient
-      const { data: recipientProfile } = await supabase
-        .from('truck_profiles')
-        .select('email, full_name')
+      // Check recipient's email notification preference
+      const { data: recipientSeller } = await supabase
+        .from('truck_sellers')
+        .select('message_email_pref')
         .eq('user_id', recipientId)
         .single();
 
-      if (recipientProfile?.email) {
-        let truckInfo = null;
-        if (truckId) {
-          const { data: truck } = await supabase
-            .from('truck_trucks')
-            .select('make, model, year')
-            .eq('id', truckId)
-            .single();
-          if (truck) {
-            truckInfo = `${truck.year} ${truck.make} ${truck.model}`;
-          }
-        }
+      const emailPref = recipientSeller?.message_email_pref || 'each';
 
-        await sendEmail(recipientProfile.email, emailTemplates.newMessage({
-          recipientName: recipientProfile.full_name || 'there',
-          senderName: user.name || 'Someone',
-          messagePreview: message.trim().slice(0, 100) + (message.length > 100 ? '...' : ''),
-          truckInfo,
-          conversationUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/messages/${conversationId}`
-        }));
+      // Only send email if preference is 'each' (daily digest handled separately)
+      if (emailPref === 'each') {
+        const { data: recipientProfile } = await supabase
+          .from('truck_profiles')
+          .select('email, full_name')
+          .eq('user_id', recipientId)
+          .single();
+
+        if (recipientProfile?.email) {
+          let truckInfo = null;
+          if (truckId) {
+            const { data: truck } = await supabase
+              .from('truck_trucks')
+              .select('make, model, year')
+              .eq('id', truckId)
+              .single();
+            if (truck) {
+              truckInfo = `${truck.year} ${truck.make} ${truck.model}`;
+            }
+          }
+
+          await sendEmail(recipientProfile.email, emailTemplates.newMessage({
+            recipientName: recipientProfile.full_name || 'there',
+            senderName: user.name || 'Someone',
+            messagePreview: message.trim().slice(0, 100) + (message.length > 100 ? '...' : ''),
+            truckInfo,
+            conversationUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/messages/${conversationId}`
+          }));
+        }
       }
 
       return res.status(200).json({ ok: true, conversationId, messageId: msg.id });

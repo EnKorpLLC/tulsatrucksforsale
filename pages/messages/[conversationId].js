@@ -38,8 +38,14 @@ export default function ConversationThread() {
     }
   }, [user, conversationId]);
 
+  const prevMessageCountRef = useRef(0);
+
+  // Only scroll to bottom on initial load or when new messages arrive
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > prevMessageCountRef.current) {
+      scrollToBottom();
+    }
+    prevMessageCountRef.current = messages.length;
   }, [messages]);
 
   // Poll for new messages every 10 seconds
@@ -62,7 +68,11 @@ export default function ConversationThread() {
       const data = await res.json();
       if (data.ok) {
         setConversation(data.conversation);
-        setMessages(data.messages || []);
+        // Only update if there are actually new messages
+        const newMessages = data.messages || [];
+        if (!silent || newMessages.length !== messages.length) {
+          setMessages(newMessages);
+        }
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
@@ -447,4 +457,9 @@ export default function ConversationThread() {
       )}
     </>
   );
+}
+
+// Disable static generation - this page requires authentication
+export async function getServerSideProps() {
+  return { props: {} };
 }
