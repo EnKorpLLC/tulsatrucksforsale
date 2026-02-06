@@ -327,17 +327,20 @@ export default function Dashboard() {
                 {trucks.map((truck) => (
                   <div key={truck.id} className="relative">
                     <TruckCard truck={truck} isOwner={!!seller && truck.seller_id === seller.id} />
-                    <div className="absolute top-1.5 right-1.5 flex gap-1.5 z-10">
+                    <div className="absolute top-1.5 right-1.5 flex gap-1.5 z-20">
                       <button
                         type="button"
-                        onClick={async () => {
-                          if (!confirm('Delete this listing? This cannot be undone.')) return;
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const confirmed = window.confirm('Are you sure you want to delete this listing? This action cannot be undone.');
+                          if (!confirmed) return;
                           const res = await fetch(`/api/trucks/${truck.id}`, { method: 'DELETE', credentials: 'include' });
                           const data = await res.json();
                           if (data.ok) fetchTrucks(seller.id);
                           else alert(data.error || 'Failed to delete');
                         }}
-                        className="bg-red-500/90 hover:bg-red-500 text-white px-2 py-1 rounded text-xs font-medium shadow"
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold shadow-lg"
                       >
                         Delete
                       </button>

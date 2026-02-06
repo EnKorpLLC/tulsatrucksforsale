@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 
 export default function PhotoUpload({ photos = [], onChange, maxPhotos = 6, disabled }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadCount, setUploadCount] = useState(0);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
 
@@ -19,6 +20,8 @@ export default function PhotoUpload({ photos = [], onChange, maxPhotos = 6, disa
     setError('');
     setUploading(true);
 
+    // Validate all files first
+    const validFiles = [];
     for (const file of toUpload) {
       if (!file.type.startsWith('image/')) {
         setError('Please upload images only (JPEG, PNG, WebP, GIF)');
@@ -28,7 +31,13 @@ export default function PhotoUpload({ photos = [], onChange, maxPhotos = 6, disa
         setError('Each photo must be under 6MB');
         continue;
       }
+      validFiles.push(file);
+    }
 
+    setUploadCount(validFiles.length);
+
+    // Upload all valid files in parallel and collect URLs
+    const uploadPromises = validFiles.map(async (file) => {
       const formData = new FormData();
       formData.append('photo', file);
 
@@ -41,13 +50,22 @@ export default function PhotoUpload({ photos = [], onChange, maxPhotos = 6, disa
         const data = await res.json();
 
         if (data.ok && data.url) {
-          onChange([...photos, data.url]);
+          return data.url;
         } else {
           setError(data.error || 'Upload failed');
+          return null;
         }
       } catch (err) {
         setError('Upload failed');
+        return null;
       }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const newUrls = results.filter((url) => url !== null);
+
+    if (newUrls.length > 0) {
+      onChange([...photos, ...newUrls]);
     }
 
     setUploading(false);
@@ -86,16 +104,16 @@ export default function PhotoUpload({ photos = [], onChange, maxPhotos = 6, disa
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:border-primary-500 hover:text-primary-600 transition disabled:opacity-50"
+            className="min-w-24 h-24 px-4 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:border-primary-500 hover:text-primary-600 transition disabled:opacity-50"
           >
             {uploading ? (
-              <span className="text-xs">Uploading...</span>
+              <span className="text-xs text-center">Uploading{uploadCount > 1 ? ` ${uploadCount} photos` : ''}...</span>
             ) : (
               <>
                 <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="text-xs">Add</span>
+                <span className="text-xs text-center">Add Photos</span>
               </>
             )}
           </button>
@@ -111,7 +129,7 @@ export default function PhotoUpload({ photos = [], onChange, maxPhotos = 6, disa
       />
       {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
       <p className="text-slate-500 text-sm mt-1">
-        {photos.length} / {maxPhotos} photos · JPEG, PNG, WebP, or GIF · Max 6MB each
+        {photos.length} / {maxPhotos} photos · Select multiple at once · JPEG, PNG, WebP, or GIF · Max 6MB each
       </p>
     </div>
   );

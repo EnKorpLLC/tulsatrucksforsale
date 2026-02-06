@@ -118,6 +118,10 @@ export default function NewTruck() {
       return;
     }
 
+    // Parse price and mileage, stripping commas
+    const cleanPrice = form.price.replace(/,/g, '');
+    const cleanMileage = form.mileage ? form.mileage.replace(/,/g, '') : '';
+
     const res = await fetch('/api/trucks/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -127,8 +131,8 @@ export default function NewTruck() {
         make: form.make,
         model: form.model,
         year: parseInt(form.year),
-        mileage: form.mileage ? parseInt(form.mileage) : null,
-        price: parseFloat(form.price),
+        mileage: cleanMileage ? parseInt(cleanMileage) : null,
+        price: parseFloat(cleanPrice),
         description: form.description || null,
         vin: form.vin || null,
         status: form.status,
@@ -261,10 +265,11 @@ export default function NewTruck() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Mileage</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={form.mileage}
               onChange={(e) => setForm({ ...form, mileage: e.target.value })}
-              placeholder="50000"
+              placeholder="50,000"
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
             />
           </div>
@@ -297,13 +302,13 @@ export default function NewTruck() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Price ($) *</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               required
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
-              placeholder="25000"
+              placeholder="25,000.00"
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              step="0.01"
             />
           </div>
           <div>
