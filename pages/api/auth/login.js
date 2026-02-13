@@ -1,4 +1,4 @@
-import { supabase } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../lib/supabase';
 import { verifyAdmin } from '../../../lib/auth';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     if (profile?.user_id) {
       // Confirm at Supabase auth level regardless - if they got this far, allow login
       // Our custom email_verified_at check still gates features like listing trucks
-      const { error: confirmError } = await supabase.auth.admin.updateUserById(profile.user_id, { email_confirm: true });
+      const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(profile.user_id, { email_confirm: true });
       if (!confirmError) {
         // Retry login
         const retry = await supabase.auth.signInWithPassword({ email, password });

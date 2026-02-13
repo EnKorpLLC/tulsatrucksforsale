@@ -1,4 +1,4 @@
-import { supabase } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../lib/supabase';
 import { generateVerificationToken } from '../../../lib/emailVerification';
 import { emailTemplates, sendEmail } from '../../../lib/emailTemplates';
 
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   // Use admin API to create user with email_confirm: true
   // This prevents Supabase from sending its own verification email from supabase.io
-  const { data: authData, error } = await supabase.auth.admin.createUser({
+  const { data: authData, error } = await supabaseAdmin.auth.admin.createUser({
     email: emailLower,
     password,
     email_confirm: true,

@@ -1,4 +1,4 @@
-import { supabase } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../lib/supabase';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     .eq('user_id', row.user_id);
 
   // Also confirm at Supabase auth level so login works
-  await supabase.auth.admin.updateUserById(row.user_id, { email_confirm: true });
+  await supabaseAdmin.auth.admin.updateUserById(row.user_id, { email_confirm: true });
 
   await supabase
     .from('truck_email_verification_tokens')

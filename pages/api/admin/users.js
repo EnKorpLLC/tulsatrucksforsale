@@ -1,4 +1,4 @@
-import { supabase } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../lib/supabase';
 import { getAdminFromRequest } from '../../../lib/adminAuth';
 import { generateVerificationToken } from '../../../lib/emailVerification';
 import { emailTemplates, sendEmail } from '../../../lib/emailTemplates';
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     }
 
     // Also confirm at Supabase auth level so login works
-    await supabase.auth.admin.updateUserById(userId, { email_confirm: true });
+    await supabaseAdmin.auth.admin.updateUserById(userId, { email_confirm: true });
 
     return res.status(200).json({ ok: true, message: 'User email verified' });
   }
