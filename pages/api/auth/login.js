@@ -9,7 +9,27 @@ export default async function handler(req, res) {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
   // Try Supabase Auth first
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+  let { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+  // If login failed due to email not confirmed at the Supabase auth level,
+  // check if the user verified via our custom system (truck_profiles.email_verified_at).
+  // If so, confirm them at the Supabase level and retry login.
+  if (authError && authError.message?.toLowerCase().includes('email not confirmed')) {
+    const { data: profile } = await supabase
+      .from('truck_profiles')
+      .select('user_id, email_verified_at')
+      .ilike('email', email.trim().toLowerCase())
+      .single();
+
+    if (profile?.email_verified_at && profile.user_id) {
+      // User verified via our system - confirm at Supabase auth level
+      await supabase.auth.admin.updateUserById(profile.user_id, { email_confirm: true });
+      // Retry login
+      const retry = await supabase.auth.signInWithPassword({ email, password });
+      authData = retry.data;
+      authError = retry.error;
+    }
+  }
 
   if (authData?.user) {
     // Check if admin (email in truck_admins)

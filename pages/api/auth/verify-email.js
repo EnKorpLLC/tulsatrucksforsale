@@ -25,6 +25,9 @@ export default async function handler(req, res) {
     .update({ email_verified_at: now })
     .eq('user_id', row.user_id);
 
+  // Also confirm at Supabase auth level so login works
+  await supabase.auth.admin.updateUserById(row.user_id, { email_confirm: true });
+
   await supabase
     .from('truck_email_verification_tokens')
     .delete()

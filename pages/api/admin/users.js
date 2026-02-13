@@ -36,6 +36,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to verify user' });
     }
 
+    // Also confirm at Supabase auth level so login works
+    await supabase.auth.admin.updateUserById(userId, { email_confirm: true });
+
     return res.status(200).json({ ok: true, message: 'User email verified' });
   }
 
