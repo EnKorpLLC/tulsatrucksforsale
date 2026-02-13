@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [adsModal, setAdsModal] = useState(null);
   const [leadModal, setLeadModal] = useState(null);
   const [reports, setReports] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     fetch('/api/admin/me')
@@ -37,7 +38,7 @@ export default function AdminDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    const [t, s, f, n, r, a, rep, statsRes] = await Promise.all([
+    const [t, s, f, n, r, a, rep, statsRes, usersRes] = await Promise.all([
       supabase.from('truck_trucks').select('*, seller:truck_sellers(name, email)').order('created_at', { ascending: false }),
       supabase.from('truck_sellers').select('*').order('name'),
       supabase.from('truck_financing_requests').select('*, truck:truck_trucks(make, model, year), buyer:truck_buyers(name, email, phone)').order('created_at', { ascending: false }),
@@ -46,6 +47,7 @@ export default function AdminDashboard() {
       supabase.from('truck_ads').select('*').order('created_at', { ascending: false }),
       supabase.from('truck_message_reports').select('*').order('created_at', { ascending: false }),
       fetch('/api/admin/stats').then((r) => r.json()),
+      fetch('/api/admin/users').then((r) => r.json()),
     ]);
     setTrucks(t.data || []);
     setSellers(s.data || []);
@@ -55,6 +57,7 @@ export default function AdminDashboard() {
     setAds(a.data || []);
     setReports(rep.data || []);
     setStats(statsRes);
+    setUsers(usersRes.users || []);
     setLoading(false);
   }
 
@@ -111,7 +114,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="flex gap-2 border-b border-slate-200 mb-8 overflow-x-auto">
-        {['stats', 'trucks', 'featured', 'sellers', 'financing', 'ads', 'reports', 'notes', 'rules'].map((t) => (
+        {['stats', 'trucks', 'featured', 'sellers', 'users', 'financing', 'ads', 'reports', 'notes', 'rules'].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -326,6 +329,101 @@ export default function AdminDashboard() {
                 </table>
               </div>
               {sellers.length === 0 && <p className="p-8 text-center text-slate-500">No sellers</p>}
+            </div>
+          )}
+
+          {tab === 'users' && (
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="p-4 border-b border-slate-200">
+                <h3 className="font-semibold text-slate-900">Users</h3>
+                <p className="text-slate-500 text-sm mt-1">Manage user accounts and email verification status.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Role</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Email Verified</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Joined</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {users.map((u) => (
+                      <tr key={u.user_id} className={!u.email_verified_at ? 'bg-amber-50/50' : ''}>
+                        <td className="px-4 py-3 font-medium">{u.full_name || '—'}</td>
+                        <td className="px-4 py-3 text-slate-600">{u.email}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700'
+                          }`}>{u.role || 'user'}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {u.email_verified_at ? (
+                            <span className="text-green-700 text-sm font-medium">
+                              Verified {new Date(u.email_verified_at).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-800">Not verified</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 text-sm">
+                          {new Date(u.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          {!u.email_verified_at && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={async () => {
+                                  const res = await fetch('/api/admin/users', {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: u.user_id }),
+                                  });
+                                  const data = await res.json();
+                                  if (data.ok) {
+                                    alert('User verified successfully');
+                                    loadAll();
+                                  } else {
+                                    alert(data.error || 'Failed to verify');
+                                  }
+                                }}
+                                className="text-green-600 hover:underline text-sm font-medium"
+                              >
+                                Verify
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  const res = await fetch('/api/admin/users', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: u.user_id }),
+                                  });
+                                  const data = await res.json();
+                                  if (data.ok) {
+                                    alert(data.message || 'Verification email sent');
+                                  } else {
+                                    alert(data.error || 'Failed to send');
+                                  }
+                                }}
+                                className="text-primary-600 hover:underline text-sm font-medium"
+                              >
+                                Resend Email
+                              </button>
+                            </div>
+                          )}
+                          {u.email_verified_at && (
+                            <span className="text-slate-400 text-sm">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {users.length === 0 && <p className="p-8 text-center text-slate-500">No users</p>}
             </div>
           )}
 
