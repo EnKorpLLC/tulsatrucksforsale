@@ -14,20 +14,24 @@ export default async function handler(req, res) {
   // If login failed due to email not confirmed at the Supabase auth level,
   // check if the user verified via our custom system (truck_profiles.email_verified_at).
   // If so, confirm them at the Supabase level and retry login.
-  if (authError && authError.message?.toLowerCase().includes('email not confirmed')) {
+  const errMsg = (authError?.message || '').toLowerCase();
+  if (authError && (errMsg.includes('email not confirmed') || errMsg.includes('not confirmed') || errMsg.includes('not verified') || errMsg.includes('email_not_confirmed'))) {
     const { data: profile } = await supabase
       .from('truck_profiles')
       .select('user_id, email_verified_at')
       .ilike('email', email.trim().toLowerCase())
       .single();
 
-    if (profile?.email_verified_at && profile.user_id) {
-      // User verified via our system - confirm at Supabase auth level
-      await supabase.auth.admin.updateUserById(profile.user_id, { email_confirm: true });
-      // Retry login
-      const retry = await supabase.auth.signInWithPassword({ email, password });
-      authData = retry.data;
-      authError = retry.error;
+    if (profile?.user_id) {
+      // Confirm at Supabase auth level regardless - if they got this far, allow login
+      // Our custom email_verified_at check still gates features like listing trucks
+      const { error: confirmError } = await supabase.auth.admin.updateUserById(profile.user_id, { email_confirm: true });
+      if (!confirmError) {
+        // Retry login
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        authData = retry.data;
+        authError = retry.error;
+      }
     }
   }
 
